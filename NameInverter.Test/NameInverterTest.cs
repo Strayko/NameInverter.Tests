@@ -2,15 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.VisualBasic;
 using NUnit.Framework;
 
 namespace NameInverter.Test
 {
     public class Tests
     {
+        private static NameInverter _nameInverter;
+        
+        [SetUp]
+        public void SetUp()
+        {
+            _nameInverter = new NameInverter();
+        }
+        
         private static void AssertInverted(string invertedName, string originalName)
         {
-            Assert.AreEqual(invertedName, InvertName(originalName));
+            Assert.AreEqual(invertedName, _nameInverter.InvertName(originalName));
         }
 
         [Test]
@@ -50,31 +59,23 @@ namespace NameInverter.Test
         }
 
         [Test]
-        public void IgnoreHonorific()
+        public void IgnoreHonorifics()
         {
             AssertInverted("Last First", "Mr. First Last");
+            AssertInverted("Last First", "Mrs. First Last");
         }
 
-        private static string InvertName(string name)
+        [Test]
+        public void PostNominals_StayAtEnd()
         {
-            if (name == null || name.Length <= 0)
-            {
-                return "";
-            }
-            else
-            {
-                var regex = new Regex(" +");
-                List<string> names = SplitNames(name, regex);
-                if (names.Count > 1 && names[0].Equals("Mr.")) names.RemoveAt(0);
-                
-                if (names.Count == 1) return names[0];
-                return String.Format("{0} {1}", names[1], names[0]);
-            }
+            AssertInverted("Last First Sr.", "First Last Sr.");
+            AssertInverted("Last First BS. Phd.", "First Last BS. Phd.");
         }
 
-        private static List<string> SplitNames(string name, Regex regex)
+        [Test]
+        public void Integration()
         {
-            return new List<string>(regex.Split(name.Trim()));
+            AssertInverted("Last First III esq.", "  First  Last  III   esq.   ");
         }
     }
 }
